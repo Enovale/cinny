@@ -6,6 +6,7 @@ import { getAccountData, getStateEvent, getStateEvents } from '../../utils/room'
 import { AccountDataEvent } from '../../../types/matrix/accountData';
 import { PackMetaReader } from './PackMetaReader';
 import { PackAddress } from './PackAddress';
+import { byOrderKey } from '../../utils/sort';
 
 export function packAddressEqual(a1?: PackAddress, a2?: PackAddress): boolean {
   if (!a1 && !a2) return true;
@@ -59,19 +60,26 @@ export function getGlobalImagePacks(mx: MatrixClient): ImagePack[] {
 
   const roomIds = Object.keys(roomIdToPackInfo);
 
-  const packs = roomIds.flatMap((roomId) => {
-    if (typeof roomIdToPackInfo[roomId] !== 'object') return [];
-    const room = mx.getRoom(roomId);
-    if (!room) return [];
-    const packStateKeyToUnknown = roomIdToPackInfo[roomId];
-    const packEvents = getStateEvents(room, StateEvent.PoniesRoomEmotes);
-    const globalPackEvents = packEvents.filter((mE) => {
-      const stateKey = mE.getStateKey();
-      if (typeof stateKey === 'string') return !!packStateKeyToUnknown[stateKey];
-      return false;
+  const packs = roomIds
+    .flatMap((roomId) => {
+      if (typeof roomIdToPackInfo[roomId] !== 'object') return [];
+      const room = mx.getRoom(roomId);
+      if (!room) return [];
+      const packStateKeyToUnknown = roomIdToPackInfo[roomId];
+      const packEvents = getStateEvents(room, StateEvent.PoniesRoomEmotes);
+      const globalPackEvents = packEvents.filter((mE) => {
+        const stateKey = mE.getStateKey();
+        if (typeof stateKey === 'string') return !!packStateKeyToUnknown[stateKey];
+        return false;
+      });
+      return makeImagePacks(globalPackEvents);
+    })
+    .sort((a, b) => {
+      if (!a.address || !b.address) return 0;
+      const stateA = roomIdToPackInfo[a.address.roomId][a.address.stateKey];
+      const stateB = roomIdToPackInfo[b.address.roomId][b.address.stateKey];
+      return byOrderKey(stateA?.order ?? 'zzzz', stateB?.order ?? 'zzzz');
     });
-    return makeImagePacks(globalPackEvents);
-  });
 
   return packs;
 }
