@@ -6,7 +6,7 @@ import { IImageInfo } from '../../../types/matrix/common';
  * im.ponies.emote_rooms content
  */
 export type PackState = {
-  order: string;
+  "com.enovale.msc4377.order"?: string;
 }
 export type PackStateKeyToObject = Record<string, PackState>;
 export type RoomIdToStateKey = Record<string, PackStateKeyToObject>;

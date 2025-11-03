@@ -78,7 +78,7 @@ export function getGlobalImagePacks(mx: MatrixClient): ImagePack[] {
       if (!a.address || !b.address) return 0;
       const stateA = roomIdToPackInfo[a.address.roomId][a.address.stateKey];
       const stateB = roomIdToPackInfo[b.address.roomId][b.address.stateKey];
-      return byOrderKey(stateA?.order ?? 'zzzz', stateB?.order ?? 'zzzz');
+      return byOrderKey(stateA?.['com.enovale.msc4377.order'], stateB?.['com.enovale.msc4377.order']);
     });
 
   return packs;
